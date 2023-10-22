@@ -1,0 +1,25 @@
+.layout {
+  background: radial-gradient(50% 50% at 50% 50%, #247e66 0%, #073b2d 100%);
+
+    background-size: "cover";
+  }
+  
+  .container {
+    max-width: 408px;
+    margin: auto;
+  }
+  
+  .title {
+    text-align: center;
+    color: #626262;
+    font-size: 30px;
+    letter-spacing: -0.04em;
+  }
+  
+  .imageContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  

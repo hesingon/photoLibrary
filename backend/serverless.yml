@@ -1,0 +1,172 @@
+service: s3-file-upload
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: dev
+  region: ap-southeast-1
+  memorySize: 128
+  logs:
+    restApi:
+      accessLogging: true
+      executionLogging: true
+  environment:
+    AWS__REGION: <TO ENTER>
+    S3__BUCKET__NAME: <TO ENTER>
+    S3__BUCKET__NAME_STATIC_WEBSITE: <TO ENTER>
+    NODE_ENV: production
+    DYNAMO_TABLE_NAME: <TO ENTER>
+
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
+  iamRoleStatements:
+  # Allow functions to list all buckets
+    - Effect: Allow
+      Action: 's3:ListBucket'
+      Resource: '*'
+    # Allow functions to read/write objects in a bucket
+    - Effect: Allow
+      Action:
+        - 's3:GetObject'
+        - 's3:GetObjectAcl'
+        - 's3:PutObject'
+        - 's3:PutObjectAcl'
+        - "s3:DeleteObject"
+      Resource:
+        - Fn::Sub: arn:aws:s3:::${self:provider.environment.S3__BUCKET__NAME}/*
+    
+    # Allow function to read/write on DynamoDB Table
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Scan"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.environment.AWS__REGION}:*:table/${self:provider.environment.DYNAMO_TABLE_NAME}" 
+    
+    # Allow function to access cognito user pool
+    - Effect: "Allow"
+      Action:
+        - "cognito-idp:AdminCreateUser"
+        - "cognito-idp:AdminInitiateAuth"
+        - "cognito-idp:AdminRespondToAuthChallenge"
+        - "cognito-idp:AdminUserGlobalSignOut"
+        - "cognito-idp:CreateUser"
+        - "cognito-idp:ListUsers"
+        - "cognito-idp:ListUserPools"
+        - "cognito-idp:AdminGetUser"
+        - "cognito-idp:ListUsersInGroup"
+      Resource:
+        - Fn::GetAtt:
+            - PhotoLibraryUserPool
+            - Arn
+
+package:
+  exclude:
+    - ./uploads/**
+    
+functions:
+  app:
+    handler: app/app.handler
+    events: 
+      - http: 
+          path: /
+          method: ANY
+          cors: true
+  uploadPhotos:
+    handler: app/app.handler
+    events:
+      - http: 
+          method: post
+          cors: true 
+          path: upload
+  listPhotos:
+    handler: app/app.handler
+    events:
+      - http:
+          method: get
+          cors: true 
+          path: list-photos
+  getPhotos:
+    handler: app/app.handler
+    events:
+      - http:
+          method: get
+          cors: true 
+          path: photo/{key}
+  togglePhotoAccess:
+    handler: app/app.handler
+    events:
+      - http:
+          method: put
+          cors: true 
+          path: photo-access/{key}
+  deletePhotos:
+    handler: app/app.handler
+    events:
+      - http:
+          method: delete
+          cors: true 
+          path: photo/{key}
+    
+resources:
+  Resources:
+    MyS3Bucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: ${self:provider.environment.S3__BUCKET__NAME_STATIC_WEBSITE}
+        AccessControl: Private
+    YourDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: ${self:provider.environment.DYNAMO_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: photoKey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: photoKey
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    
+    PhotoLibraryUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: PhotoLibraryUserPool
+        AutoVerifiedAttributes:
+          - email
+        UsernameAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: false
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+    PhotoLibraryUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: PhotoLibraryUserPoolClient
+        UserPoolId:
+          Ref: PhotoLibraryUserPool
+  Outputs:
+    UserPoolId:
+      Value:
+        Ref: PhotoLibraryUserPool
+
+    UserPoolClientId:
+      Value:
+        Ref: PhotoLibraryUserPoolClient
