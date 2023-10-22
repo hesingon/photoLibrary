@@ -1,5 +1,3 @@
-An AWS Lambda Function that allows a user to upload an image to an S3 Bucket via Multer, NodeJS, & Express.
-
 # PhotoLibrary - Developer Guide
 ![preview](Screenshot.png)
 
@@ -46,7 +44,7 @@ Once all configs are updated, run
 ```
 sls deploy
 ```
-Upon successful deployment, you will see a list of API endpoints. A folder `./serverless` is created, inside which there are cloudformation templates. 
+Upon successful deployment, you will see a list of API endpoints. A folder `./serverless` is created, inside which there are cloudformation templates(which will be similar to the ones in `generated cloudformation templates`).
 
 Take down the URLs and update these constant in `frontend/src/api/connections.ts`:
 1. `BACKEND`
