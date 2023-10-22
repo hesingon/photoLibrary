@@ -7,18 +7,18 @@ An AWS Lambda Function that allows a user to upload an image to an S3 Bucket via
 ![diagram](architecture.png)
 
 ### Technology Stack
-a. Front end – React Framework hosted 
+a. Front end – React Framework hosted as static website in S3
 
 b. Authentication – Amazon Cognito
 
-c. Backend – Serverless framework, node.js in Amazon lambda, (cloudformation templateds are generated.)
+c. Backend – Serverless framework, node.js in Amazon lambda, (cloudformation templates will be generated upon deployment)
 
 d. DB – Dynamo DB
 
 e. Storage – Amazon S3
 
 ## Demo
-Demo url:
+[Demo url](http://photolibrary-dhx.s3-website-ap-southeast-1.amazonaws.com/Photo) :
 `http://photolibrary-dhx.s3-website-ap-southeast-1.amazonaws.com/Photo`
 
 John (Admin) 
@@ -36,17 +36,21 @@ Navigate to `/backend`, install the required dependencies:
 npm install
 ```
 ### Configurations
-You will need to configure the following in `./backend/serverless.yml`
+You will need to enter all configs in `./backend/serverless.yml` which includes:
 > `AWS__REGION`: aws region <br>
 > `S3__BUCKET__NAME`: S3 bucket name for storing the photos<br>
 > `S3__BUCKET__NAME_STATIC_WEBSITE`: S3 bucket name for hosting static frontend<br>
 > `DYNAMO_TABLE_NAME`: name of dynamoDB table name<br>
 
-Once all configs are done, run
+Once all configs are updated, run
 ```
 sls deploy
 ```
-Upon successful deployment, you will see a list of API endpoints. Take down the backend URL and update `BACKEND` and `S3_URL` in `frontend/src/api/connections.ts`.
+Upon successful deployment, you will see a list of API endpoints. A folder `./serverless` is created, inside which there are cloudformation templates. 
+
+Take down the URLs and update these constant in `frontend/src/api/connections.ts`:
+1. `BACKEND`
+2. `S3_URL`
 
 Run `npm install` again in `./frontend`, then you can start the development server by running or `npm run dev` or `yarn dev`.
 
