@@ -56,7 +56,7 @@ Run `npm install` again in `./frontend`, then you can start the development serv
 A sciprt `./frontend/S3_deploy.sh` was created to assist deploying frontend to S3 to be hosted as static website. (You can explore this file to find out the steps involved.)
 ```sh
 ./S3_deploy.sh 
-    --bucket photolibrary-dhx 
+    --bucket <globally-unique-bucket-name>
     [--skip-build] # if you wish to skip rebuilding of frontend
     [--undo] # if you want to delete S3 bucket, which allows for clean redeploy
 ```
